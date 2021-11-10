@@ -55,22 +55,17 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  // ..........................................................................
-  // Insert autonomous user code here.
-  // ..........................................................................
   claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
   frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
 
-  // claw.spinToPosition(360, degrees);
-  claw.spinFor(forward, .7, turns); // lower claw (frontarms already start lowered)
+  claw.spinFor(forward, .6, turns); // lower claw (frontarms already start lowered)
 
   Drivetrain.driveFor(forward, 45, inches); // drive forward
   Drivetrain.setStopping(brake); 
   Drivetrain.stop(); // stop with arms under goal
 
-  // claw.spinToPosition(200, degrees);
   claw.spinFor(reverse, .25, turns); // raise claw slightly to pick up goal
-  // frontarms.spinToPosition(70, degrees);
+
   frontarms.spinFor(reverse, .5, turns); // raise arms to support claw in picking up goal
 
   /* THIS WOULD BE A GOOD PLACE TO ROTATE AND PICK UP THE NEXT ONE WITH THE BACKARMS */
@@ -97,20 +92,25 @@ void autonomous(void) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol(void) {
-  // User control code here, inside the loop
   while (1) {
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
     // values based on feedback from the joysticks.
 
-    // ........................................................................
-    // Insert user code here. This is where you use the joystick values to
-    // update your motors, etc.
-    // ........................................................................
+    // configuring values
+    Drivetrain.setDriveVelocity(50, percent);
 
+    // if the controlls for an arm arenn't being used the position will hold
     if(!Controller1.ButtonB.pressing() || !Controller1.ButtonX.pressing()) {
       backarm.setStopping(hold);
     }
+    if(!Controller1.ButtonL1.pressing() || !Controller1.ButtonL2.pressing()) {
+      claw.setStopping(hold);
+    }
+    if(!Controller1.ButtonR1.pressing() || !Controller1.ButtonR2.pressing()) {
+      frontarms.setStopping(hold);
+    }
+    
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
   }
