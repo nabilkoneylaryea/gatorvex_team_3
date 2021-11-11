@@ -18,6 +18,7 @@
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
+#include "functions.h"
 
 using namespace vex;
 
@@ -40,6 +41,9 @@ void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
+  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
+  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
+
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
 }
@@ -55,28 +59,22 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
-  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
-
   claw.spinFor(forward, .6, turns); // lower claw (frontarms already start lowered)
 
   Drivetrain.driveFor(forward, 45, inches); // drive forward
   Drivetrain.setStopping(brake); 
   Drivetrain.stop(); // stop with arms under goal
 
-  claw.spinFor(reverse, .25, turns); // raise claw slightly to pick up goal
-
-  frontarms.spinFor(reverse, .5, turns); // raise arms to support claw in picking up goal
+  pickUpGoalFront();
 
   /* THIS WOULD BE A GOOD PLACE TO ROTATE AND PICK UP THE NEXT ONE WITH THE BACKARMS */
-  
   // Drivetrain.turnFor(right, .5, turns); // turn the robot to face the position from which it came
 
   Drivetrain.driveFor(reverse, 36, inches); // drive directly backwards to starting position
   Drivetrain.stop(); // stop with goal in front arms
 
   // set down goal in home field
-  // frontarms.spinToPosition();
+  putDownGoalFront();
 
   // go for the next goal
 
@@ -99,6 +97,10 @@ void usercontrol(void) {
 
     // configuring values
     Drivetrain.setDriveVelocity(50, percent);
+    Drivetrain.setTurnVelocity(50, percent);
+    claw.setMaxTorque(100, percent);
+    frontarms.setMaxTorque(100, percent);
+    backarm.setMaxTorque(100, percent);
 
     // if the controlls for an arm arenn't being used the position will hold
     if(!Controller1.ButtonB.pressing() || !Controller1.ButtonX.pressing()) {
@@ -110,6 +112,10 @@ void usercontrol(void) {
     if(!Controller1.ButtonR1.pressing() || !Controller1.ButtonR2.pressing()) {
       frontarms.setStopping(hold);
     }
+
+    // A and B to pick up and set down goals
+    Controller1.ButtonA.pressed(pickUpGoalFront);
+    Controller1.ButtonB.pressed(putDownGoalFront);
     
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
