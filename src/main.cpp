@@ -72,7 +72,7 @@ void autonomous(void) {
   Drivetrain.setStopping(brake); 
   Drivetrain.stop(); // stop with arms under goal
 
-  // pickUpGoalFront(frontStateUp);
+  // raiseFront(isFrontRaised);
 
   /* THIS WOULD BE A GOOD PLACE TO ROTATE AND PICK UP THE NEXT ONE WITH THE BACKARMS */
   // Drivetrain.turnFor(right, .5, turns); // turn the robot to face the position from which it came
@@ -81,7 +81,7 @@ void autonomous(void) {
   Drivetrain.stop(); // stop with goal in front arms
 
   // set down goal in home field
-  // putDownGoalFront(frontStateUp);
+  // putDownGoalFront(isFrontRaised);
 
   // go for the next goal
 
@@ -95,20 +95,20 @@ void autonomous(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-bool frontStateUp = false;
-bool backStateUp = true;
+bool isFrontRaised = false;
+bool isBackRaised = true;
 
 void APressed() {
-    pickUpGoalFront(frontStateUp);
+    raiseFront(isFrontRaised);
 }
 void BPressed() {
-    putDownGoalFront(frontStateUp);
+    lowerFront(isFrontRaised);
 } 
 void XPressed() {
-    pickUpGoalBack(backStateUp);
+    raiseBack(isBackRaised);
 } 
 void YPressed() {
-    putDownGoalBack(backStateUp);
+    lowerBack(isBackRaised);
 }  
 
 void usercontrol(void) {
@@ -130,12 +130,12 @@ void usercontrol(void) {
     //std::cout <<  clawAngle << std::endl;
 
     // if the controlls for an arm aren't being used the position will hold
-    if(backStateUp) {
+    if(isBackRaised) {
       backarm.stop(hold);
     } else if(!Controller1.ButtonUp.pressing() && !Controller1.ButtonDown.pressing()) {
       backarm.stop(hold);
     }
-    if(frontStateUp) {
+    if(isFrontRaised) {
       frontarms.stop(hold);
       claw.stop(hold);
     } else {
@@ -147,7 +147,7 @@ void usercontrol(void) {
       }
     }
 
-    // if claw is being controlled make sure it's not going passed maximum range
+    // if claw is being controlled make sure it's not going past maximum range
     if(Controller1.ButtonUp.pressing() && clawAngle >= 240) {
       claw.stop(hold);
       while(Controller1.ButtonUp.pressing());
