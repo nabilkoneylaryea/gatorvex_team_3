@@ -15,8 +15,10 @@
 // backarm              motor         14              
 // Controller1          controller                    
 // frontarms            motor_group   7, 17           
+// frontarmpot          pot           A               
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
+#include <iostream>
 #include "vex.h"
 #include "functions.h"
 
@@ -57,15 +59,20 @@ void pre_auton(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-
+int function() {
+  return 0;
+}
 void autonomous(void) {
-  claw.spinFor(forward, .6, turns); // lower claw (frontarms already start lowered)
-
+  claw.spinFor(forward, .6, turns, false); // lower claw (frontarms already start lowered)
+  float clawAngle = frontarmpot.angle(degrees);
+  std::cout <<  clawAngle << std::endl;
+  task name(function);
+  
   Drivetrain.driveFor(forward, 45, inches); // drive forward
   Drivetrain.setStopping(brake); 
   Drivetrain.stop(); // stop with arms under goal
 
-  pickUpGoalFront();
+  // pickUpGoalFront(frontStateUp);
 
   /* THIS WOULD BE A GOOD PLACE TO ROTATE AND PICK UP THE NEXT ONE WITH THE BACKARMS */
   // Drivetrain.turnFor(right, .5, turns); // turn the robot to face the position from which it came
@@ -74,7 +81,7 @@ void autonomous(void) {
   Drivetrain.stop(); // stop with goal in front arms
 
   // set down goal in home field
-  putDownGoalFront();
+  // putDownGoalFront(frontStateUp);
 
   // go for the next goal
 
@@ -88,35 +95,68 @@ void autonomous(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-
+bool frontStateUp = false;
+bool backStateUp = true;
+void APressed() {
+    pickUpGoalFront(frontStateUp);
+}
+void BPressed() {
+    putDownGoalFront(frontStateUp);
+} 
+void XPressed() {
+    pickUpGoalBack(backStateUp);
+} 
+void YPressed() {
+    putDownGoalBack(backStateUp);
+}  
 void usercontrol(void) {
+  // claw.spinFor(forward, .8, turns); // lower claw (frontarms already start lowered)
+  
+  
   while (1) {
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
     // values based on feedback from the joysticks.
 
     // configuring values
-    Drivetrain.setDriveVelocity(50, percent);
-    Drivetrain.setTurnVelocity(50, percent);
+    float clawAngle = frontarmpot.value(degrees);
+    // Drivetrain.setDriveVelocity(50, percent);
+    // Drivetrain.setTurnVelocity(50, percent);
     claw.setMaxTorque(100, percent);
     frontarms.setMaxTorque(100, percent);
     backarm.setMaxTorque(100, percent);
 
+    // log where the angle
+    //std::cout <<  clawAngle << std::endl;
+
     // if the controlls for an arm arenn't being used the position will hold
-    if(!Controller1.ButtonB.pressing() || !Controller1.ButtonX.pressing()) {
-      backarm.setStopping(hold);
+    if(backStateUp) {
+      
+      backarm.stop(hold);
     }
     if(!Controller1.ButtonL1.pressing() || !Controller1.ButtonL2.pressing()) {
       claw.setStopping(hold);
+      claw.stop();
     }
     if(!Controller1.ButtonR1.pressing() || !Controller1.ButtonR2.pressing()) {
       frontarms.setStopping(hold);
+      frontarms.stop();
     }
 
     // A and B to pick up and set down goals
-    Controller1.ButtonA.pressed(pickUpGoalFront);
-    Controller1.ButtonB.pressed(putDownGoalFront);
-    
+    Controller1.ButtonA.pressed(APressed);
+    Controller1.ButtonB.pressed(BPressed);
+    //Controller1.ButtonX.pressed(XPressed);
+    //Controller1.ButtonY.pressed(YPressed);
+    if(Controller1.ButtonX.pressing()){
+      XPressed();
+      while(Controller1.ButtonX.pressing());
+    }
+    if(Controller1.ButtonY.pressing()){
+      YPressed();
+      while(Controller1.ButtonY.pressing());
+    }
+
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
   }

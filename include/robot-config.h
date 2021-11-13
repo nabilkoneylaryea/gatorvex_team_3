@@ -8,6 +8,7 @@ extern motor claw;
 extern motor backarm;
 extern controller Controller1;
 extern motor_group frontarms;
+extern pot frontarmpot;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.

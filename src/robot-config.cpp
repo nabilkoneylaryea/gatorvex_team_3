@@ -21,6 +21,7 @@ controller Controller1 = controller(primary);
 motor frontarmsMotorA = motor(PORT7, ratio36_1, false);
 motor frontarmsMotorB = motor(PORT17, ratio36_1, true);
 motor_group frontarms = motor_group(frontarmsMotorA, frontarmsMotorB);
+pot frontarmpot = pot(Brain.ThreeWirePort.A);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable
