@@ -1,5 +1,6 @@
 #include "functions.h"
 #include <iostream>
+
 void raiseFront(bool &isFrontRaised) {
   std::cout << "FRONT UP: " << isFrontRaised;
   if(!isFrontRaised) {
@@ -28,7 +29,7 @@ void raiseBack(bool &isBackRaised) {
   std::cout << "BACK UP: " << isBackRaised;
   if(!isBackRaised) {
     std::cout << " 1 ";
-    backarm.spinFor(forward, .6, turns); // raise arms to support claw in picking up goal
+    backarm.spinFor(forward, .6, turns); // raise back slightly arm
     std::cout << " 2";
 
     isBackRaised = !isBackRaised;
@@ -39,14 +40,23 @@ void lowerBack(bool &isBackRaised) {
   std::cout << "BACK DOWN: " << isBackRaised;
   if(isBackRaised) {
   std::cout << " 1 ";
-  backarm.spinFor(reverse, 1, turns); // lower frontarms to support claw in putting down goal
+  backarm.spinFor(reverse, 1, turns, false); // lower backarm all the way
   std::cout << " 2";
 
   isBackRaised = !isBackRaised;
   }
   std::cout << std::endl;
 }
+bool moveClawToAngle(float currentAngle, float toAngle) {
+  bool result = false;
+  if(currentAngle > toAngle) {
+    claw.spin(reverse);
+  } else if(currentAngle < toAngle) {
+    claw.spin(forward);
+  } else {
+    claw.stop(hold);
+    result = true;
+  }
 
-void moveClawToAngle(float currentAngle, float toAngle) {
-
+  return result;
 }

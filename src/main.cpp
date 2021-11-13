@@ -21,6 +21,7 @@
 #include <iostream>
 #include "vex.h"
 #include "functions.h"
+#include "auton.h"
 
 using namespace vex;
 
@@ -38,7 +39,6 @@ competition Competition;
 /*  function is only called once after the V5 has been powered on and        */
 /*  not every time that the robot is disabled.                               */
 /*---------------------------------------------------------------------------*/
-
 void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -59,37 +59,10 @@ void pre_auton(void) {
 bool isFrontRaised = false;
 bool isBackRaised = true;
 
-int function() {
-  return 0;
-}
 void autonomous(void) {
-  // calibrating
-  float clawAngle = frontarmpot.angle(degrees);
-  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
-  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
-
-  claw.spinFor(forward, .6, turns, false); // lower claw (frontarms already start lowered)
-  
-  std::cout <<  clawAngle << std::endl;
-  task name(function);
-  
-  Drivetrain.driveFor(forward, 45, inches); // drive forward
-  Drivetrain.setStopping(brake); 
-  Drivetrain.stop(); // stop with arms under goal
-
-  // raiseFront(isFrontRaised);
-
-  /* THIS WOULD BE A GOOD PLACE TO ROTATE AND PICK UP THE NEXT ONE WITH THE BACKARMS */
-  // Drivetrain.turnFor(right, .5, turns); // turn the robot to face the position from which it came
-
-  Drivetrain.driveFor(reverse, 36, inches); // drive directly backwards to starting position
-  Drivetrain.stop(); // stop with goal in front arms
-
-  // set down goal in home field
-  // putDownGoalFront(isFrontRaised);
-
-  // go for the next goal
-
+  // Comment one of these function calls out depending on which side we start on
+  auton_left();
+  // auton_right();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -115,11 +88,17 @@ void YPressed() {
 }  
 
 void usercontrol(void) {
+  // configurations
   float clawAngle;
-  isFrontRaised = false;
-  isBackRaised = true;
   claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
   frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
+  claw.setMaxTorque(100, percent);
+  frontarms.setMaxTorque(100, percent);
+  backarm.setMaxTorque(100, percent);
+  isFrontRaised = false;
+  isBackRaised = true;
+  while(moveClawToAngle(frontarmpot.value(degrees), 240)){} // move the claw down to a starting position
+  
   // claw.spinFor(forward, .8, turns); // lower claw (frontarms already start lowered)
   // backarm.spinFor(forward, .6, turns, false); // lower backarm
   
@@ -130,26 +109,40 @@ void usercontrol(void) {
 
     // reading sensor values
     clawAngle = frontarmpot.value(degrees);
+    //std::cout <<  clawAngle << std::endl; // log the angle
+
+    // A and B to pick up and set down goals with the front
+    if(Controller1.ButtonA.pressing()){
+      APressed(); // pick up front
+      while(Controller1.ButtonA.pressing()); // will stop the code here until button is released
+    }
+    if(Controller1.ButtonB.pressing()){
+      BPressed(); // put down front
+      while(Controller1.ButtonB.pressing()); // will stop the code here until button is released
+    }
+    // X and Y to pick up and set down goals with the back
+    if(Controller1.ButtonX.pressing()){
+      XPressed(); // pick up back
+      while(Controller1.ButtonX.pressing()); // will stop the code here until button is released
+    }
+    if(Controller1.ButtonY.pressing()){
+      YPressed(); // put down back
+      while(Controller1.ButtonY.pressing()); // will stop the code here until button is released
+    }
     
-    claw.setMaxTorque(100, percent);
-    frontarms.setMaxTorque(100, percent);
-    backarm.setMaxTorque(100, percent);
-
-    // log where the angle
-    //std::cout <<  clawAngle << std::endl;
-
-    // if the controlls for an arm aren't being used the position will hold
-    if(isBackRaised) {
+    // if the controls for backarm aren't being used or the backarm has been raised the position will hold
+    if(isBackRaised && (!Controller1.ButtonUp.pressing() && !Controller1.ButtonDown.pressing())) {
       backarm.stop(hold);
     } else if(!Controller1.ButtonUp.pressing() && !Controller1.ButtonDown.pressing()) {
       backarm.stop(hold);
     }
+    // if the controlls for the front arms and claws aren't being used or the frontarm has been raised the position will hold
     if(isFrontRaised) {
       frontarms.stop(hold);
       claw.stop(hold);
     } else {
       if(!Controller1.ButtonL1.pressing() && !Controller1.ButtonL2.pressing()) {
-      claw.stop(hold);
+        claw.stop(hold);
       }
       if(!Controller1.ButtonR1.pressing() && !Controller1.ButtonR2.pressing()) {
         frontarms.stop(hold);
@@ -157,32 +150,12 @@ void usercontrol(void) {
     }
 
     // if claw is being controlled make sure it's not going past maximum range
-    if(Controller1.ButtonUp.pressing() && clawAngle >= 240) {
+    if((Controller1.ButtonUp.pressing() && clawAngle >= 240) || (Controller1.ButtonDown.pressing() && clawAngle <= 2)) {
       claw.stop(hold);
       while(Controller1.ButtonUp.pressing());
     }
-    if(Controller1.ButtonDown.pressing() && clawAngle <= 2) {
+    if(claw.isSpinning() && (clawAngle >= 240 || clawAngle <= 2)) {
       claw.stop(hold);
-      while(Controller1.ButtonDown.pressing());
-    }
-    
-    // A and B to pick up and set down goals with the front
-    if(Controller1.ButtonA.pressing()){
-      APressed(); // pick up front
-      while(Controller1.ButtonA.pressing());
-    }
-    if(Controller1.ButtonB.pressing()){
-      BPressed(); // put down front
-      while(Controller1.ButtonB.pressing());
-    }
-    // X and Y to pick up and set down goals with the back
-    if(Controller1.ButtonX.pressing()){
-      XPressed(); // pick up back
-      while(Controller1.ButtonX.pressing());
-    }
-    if(Controller1.ButtonY.pressing()){
-      YPressed(); // put down back
-      while(Controller1.ButtonY.pressing());
     }
 
     wait(20, msec); // Sleep the task for a short amount of time to
