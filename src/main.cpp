@@ -43,9 +43,6 @@ void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
-  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
-
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
 }
@@ -59,12 +56,20 @@ void pre_auton(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+bool isFrontRaised = false;
+bool isBackRaised = true;
+
 int function() {
   return 0;
 }
 void autonomous(void) {
-  claw.spinFor(forward, .6, turns, false); // lower claw (frontarms already start lowered)
+  // calibrating
   float clawAngle = frontarmpot.angle(degrees);
+  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
+  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
+
+  claw.spinFor(forward, .6, turns, false); // lower claw (frontarms already start lowered)
+  
   std::cout <<  clawAngle << std::endl;
   task name(function);
   
@@ -86,6 +91,7 @@ void autonomous(void) {
   // go for the next goal
 
 }
+
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*                              User Control Task                            */
@@ -95,9 +101,6 @@ void autonomous(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-bool isFrontRaised = false;
-bool isBackRaised = true;
-
 void APressed() {
     raiseFront(isFrontRaised);
 }
@@ -112,6 +115,11 @@ void YPressed() {
 }  
 
 void usercontrol(void) {
+  float clawAngle;
+  isFrontRaised = false;
+  isBackRaised = true;
+  claw.setPosition(0, degrees); // calibrate claw: starting pos = 0 deg
+  frontarms.setPosition(0, degrees); // calibrate arms: starting pos = 0 deg;
   // claw.spinFor(forward, .8, turns); // lower claw (frontarms already start lowered)
   // backarm.spinFor(forward, .6, turns, false); // lower backarm
   
@@ -120,8 +128,9 @@ void usercontrol(void) {
     // Each time through the loop your program should update motor + servo
     // values based on feedback from the joysticks.
 
-    // configuring values
-    float clawAngle = frontarmpot.value(degrees);
+    // reading sensor values
+    clawAngle = frontarmpot.value(degrees);
+    
     claw.setMaxTorque(100, percent);
     frontarms.setMaxTorque(100, percent);
     backarm.setMaxTorque(100, percent);
