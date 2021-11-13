@@ -23,8 +23,11 @@ void auton_left() {
   Drivetrain.driveFor(forward, 45, inches); // drive directly backwards to starting position
   // Drivetrain.stop(); // stop with goal in front arms
 
-  // set down goal in home field
+  // end with goal in home field
   raiseFront(isFrontRaised);
+  Drivetrain.driveFor(reverse, 6, inches);
+  Drivetrain.turnFor(left, .25, turns); // turn the robot to face the position from which it came
+  Drivetrain.driveFor(reverse, 6, inches);
 }
 void auton_right() {
   bool isFrontRaised = false;
