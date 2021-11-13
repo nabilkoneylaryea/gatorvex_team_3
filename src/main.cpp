@@ -97,6 +97,7 @@ void autonomous(void) {
 /*---------------------------------------------------------------------------*/
 bool frontStateUp = false;
 bool backStateUp = true;
+
 void APressed() {
     pickUpGoalFront(frontStateUp);
 }
@@ -109,9 +110,10 @@ void XPressed() {
 void YPressed() {
     putDownGoalBack(backStateUp);
 }  
+
 void usercontrol(void) {
   // claw.spinFor(forward, .8, turns); // lower claw (frontarms already start lowered)
-  
+  // backarm.spinFor(forward, .6, turns, false); // lower backarm
   
   while (1) {
     // This is the main execution loop for the user control program.
@@ -120,8 +122,6 @@ void usercontrol(void) {
 
     // configuring values
     float clawAngle = frontarmpot.value(degrees);
-    // Drivetrain.setDriveVelocity(50, percent);
-    // Drivetrain.setTurnVelocity(50, percent);
     claw.setMaxTorque(100, percent);
     frontarms.setMaxTorque(100, percent);
     backarm.setMaxTorque(100, percent);
@@ -129,31 +129,50 @@ void usercontrol(void) {
     // log where the angle
     //std::cout <<  clawAngle << std::endl;
 
-    // if the controlls for an arm arenn't being used the position will hold
+    // if the controlls for an arm aren't being used the position will hold
     if(backStateUp) {
-      
+      backarm.stop(hold);
+    } else if(!Controller1.ButtonUp.pressing() && !Controller1.ButtonDown.pressing()) {
       backarm.stop(hold);
     }
-    if(!Controller1.ButtonL1.pressing() || !Controller1.ButtonL2.pressing()) {
-      claw.setStopping(hold);
-      claw.stop();
-    }
-    if(!Controller1.ButtonR1.pressing() || !Controller1.ButtonR2.pressing()) {
-      frontarms.setStopping(hold);
-      frontarms.stop();
+    if(frontStateUp) {
+      frontarms.stop(hold);
+      claw.stop(hold);
+    } else {
+      if(!Controller1.ButtonL1.pressing() && !Controller1.ButtonL2.pressing()) {
+      claw.stop(hold);
+      }
+      if(!Controller1.ButtonR1.pressing() && !Controller1.ButtonR2.pressing()) {
+        frontarms.stop(hold);
+      }
     }
 
-    // A and B to pick up and set down goals
-    Controller1.ButtonA.pressed(APressed);
-    Controller1.ButtonB.pressed(BPressed);
-    //Controller1.ButtonX.pressed(XPressed);
-    //Controller1.ButtonY.pressed(YPressed);
+    // if claw is being controlled make sure it's not going passed maximum range
+    if(Controller1.ButtonUp.pressing() && clawAngle >= 240) {
+      claw.stop(hold);
+      while(Controller1.ButtonUp.pressing());
+    }
+    if(Controller1.ButtonDown.pressing() && clawAngle <= 2) {
+      claw.stop(hold);
+      while(Controller1.ButtonDown.pressing());
+    }
+    
+    // A and B to pick up and set down goals with the front
+    if(Controller1.ButtonA.pressing()){
+      APressed(); // pick up front
+      while(Controller1.ButtonA.pressing());
+    }
+    if(Controller1.ButtonB.pressing()){
+      BPressed(); // put down front
+      while(Controller1.ButtonB.pressing());
+    }
+    // X and Y to pick up and set down goals with the back
     if(Controller1.ButtonX.pressing()){
-      XPressed();
+      XPressed(); // pick up back
       while(Controller1.ButtonX.pressing());
     }
     if(Controller1.ButtonY.pressing()){
-      YPressed();
+      YPressed(); // put down back
       while(Controller1.ButtonY.pressing());
     }
 
